@@ -4,7 +4,7 @@ Vim color picker script for OS X
 > The Support OS X’s Color picker thread on the MacVim mailinglist made me hack on a little vim script that lets you select a color in OS X’s color picker and automatically insert it at the current postition in the buffer.
 This can for example be useful for web developers who are editing their CSS files with Vim or similar tasks.
 
-![image](screenshot.png)
+![image](https://github.com/iandoe/vim-osx-colorpicker/raw/master/screenshot.png)
 
 * Author : Maximilian Nickel
 * License: [BSD](http://www.opensource.org/licenses/bsd-license.php)
