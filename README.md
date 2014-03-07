@@ -22,6 +22,12 @@ Usage
 :ColorRGB
 ```
 
+The plugin detects if you're running MacVim and falls back to Terminal.app. If you want to use iTerm, do this:
+
+```viml
+let g:colorpicker_app = 'iTerm.app'
+```
+
 Changelog
 ---
 ### Update (2012-06-03)

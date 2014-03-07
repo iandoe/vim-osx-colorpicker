@@ -16,15 +16,17 @@ if exists("g:loaded_colorchooser") || !has('mac')
 endif
 let g:loaded_colorchooser = 1
 
-let s:app = 'Terminal.app'
-if has('gui_macvim')
-  let s:app = 'MacVim.app'
+if !exists("g:colorpicker_app")
+  let g:colorpicker_app = 'Terminal.app'
+  if has('gui_macvim')
+    let g:colorpicker_app = 'MacVim.app'
+  endif
 endif
 
-let s:ascrpt = ['-e "tell application \"' . s:app . '\""', 
-      \ '-e "activate"', 
+let s:ascrpt = ['-e "tell application \"' . g:colorpicker_app . '\""',
+      \ '-e "activate"',
       \ "-e \"set AppleScript's text item delimiters to {\\\",\\\"}\"",
-      \ '-e "set col to (choose color', 
+      \ '-e "set col to (choose color',
       \ '',
       \ ') as text"',
       \ '-e "end tell"']
@@ -41,7 +43,7 @@ function! s:parse_html_color()
     let cr = str2nr(strpart(w,1,offset), 16) * mult
     let cg = str2nr(strpart(w,1+offset,offset), 16) * mult
     let cb = str2nr(strpart(w,1+2*offset,offset), 16) * mult
-    return printf('default color {%d,%d,%d}', cr, cg, cb) 
+    return printf('default color {%d,%d,%d}', cr, cg, cb)
   endif
   return ''
 endfunction
