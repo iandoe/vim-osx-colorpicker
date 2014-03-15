@@ -31,6 +31,7 @@ let s:ascrpt = ['-e "tell application \"' . g:colorpicker_app . '\""',
       \ ') as text"',
       \ '-e "end tell"']
 
+" Get cursor color in HEX format
 function! s:parse_hex_color(colour)
   if a:colour[0] != ''
     return a:colour
@@ -56,6 +57,7 @@ function! s:parse_hex_color(colour)
   return a:colour
 endfunction
 
+" Convert dec value to HEX
 function! s:parse_dec_val(val)
   if a:val =~ '^-\?[12]\?[0-9]\{1,2\}$'
     let val = str2nr(a:val, 10)
@@ -67,6 +69,8 @@ function! s:parse_dec_val(val)
   end
 endfunction
 
+" Convert percent value to HEX
+" return [color, start, end]
 function! s:parse_percent_val(val)
   if a:val =~ '^-\?[0-9\.]\+%$'
     let val = strpart(a:val, 0, len(a:val) - 1)
@@ -79,6 +83,7 @@ function! s:parse_percent_val(val)
   end
 endfunction
 
+" Conver RGB value to HEX
 function! s:parse_rgb_val(val)
   let val = a:val
   let val = substitute(val, '^ \+', '', '')
@@ -92,6 +97,8 @@ function! s:parse_rgb_val(val)
   end
 endfunction
 
+" Get cursor color in RGB[A] format
+" return [color, start, end]
 function! s:parse_rgb_color(colour)
   if a:colour[0] != ''
     return a:colour
