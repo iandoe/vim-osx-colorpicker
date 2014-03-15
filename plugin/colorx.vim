@@ -31,7 +31,7 @@ let s:ascrpt = ['-e "tell application \"' . g:colorpicker_app . '\""',
       \ ') as text"',
       \ '-e "end tell"']
 
-function! s:parse_html_color()
+function! s:parse_hex_color()
   let w = ''
   let line = getline('.')
   let col = col('.')
@@ -49,11 +49,16 @@ function! s:parse_html_color()
       break
     end
   endwhile
+  return w
+endfunction
+
+function! s:parse_html_color()
+  let w = s:parse_hex_color()
 
   if w =~ '#\([a-fA-F0-9]\{3,6\}\)'
     let offset = 2
     let mult = 256
-    if len(w) == 4 or len(w) == 5
+    if len(w) == 4 || len(w) == 5
       let offset = 1
       let mult = mult * 17
     endif
