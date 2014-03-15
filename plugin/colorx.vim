@@ -32,11 +32,28 @@ let s:ascrpt = ['-e "tell application \"' . g:colorpicker_app . '\""',
       \ '-e "end tell"']
 
 function! s:parse_html_color()
-  let w = expand("<cword>")
-  if w =~ '#\([a-fA-F1-9]\{3,6\}\)'
+  let w = ''
+  let line = getline('.')
+  let col = col('.')
+  let start_col = 0
+  while 1
+    let start = match(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
+    let end = matchend(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
+    if start > -1
+      if col >= start + 1 && col <= end + 1
+        let w = matchstr(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
+        break
+      end
+      let start_col = end
+    else
+      break
+    end
+  endwhile
+
+  if w =~ '#\([a-fA-F0-9]\{3,6\}\)'
     let offset = 2
     let mult = 256
-    if len(w) == 4
+    if len(w) == 4 || len(w) == 5
       let offset = 1
       let mult = mult * 17
     endif
@@ -50,7 +67,12 @@ endfunction
 
 function! s:colour_rgb()
   let lst = remove(s:ascrpt, 4)
-  return system("osascript " . join(insert(s:ascrpt, s:parse_html_color(), 4), ' '))
+  let result = system("osascript " . join(insert(s:ascrpt, s:parse_html_color(), 4), ' '))
+  if result =~ '[0-9]\+,[0-9]\+,[0-9]\+'
+    return result
+  else
+    return ''
+  end
 endfunction
 
 function! s:append_colour(col)
@@ -58,8 +80,13 @@ function! s:append_colour(col)
 endfunction
 
 function! s:colour_hex()
-  let rgb = split(s:colour_rgb(), ',')
-  return printf('#%02X%02X%02X', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+  let rgb = s:colour_rgb()
+  if rgb == ''
+    return ''
+  else
+    let rgb = split(s:colour_rgb(), ',')
+    return printf('#%02X%02X%02X', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+  end
 endfunction
 
 command! ColorRGB :call s:append_colour(s:colour_rgb())
