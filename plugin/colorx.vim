@@ -77,7 +77,7 @@ function! s:parse_percent_val(val)
     let val = float2nr( str2float(val) * 2.55 )
     let val = max([0, val])
     let val = min([255, val])
-    return printf('%x', val)
+    return printf('%02x', val)
   else
     return a:val
   end
