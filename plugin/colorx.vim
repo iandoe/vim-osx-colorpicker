@@ -165,7 +165,7 @@ function! s:colour_rgb()
   let colour = s:parse_html_color()
   let result = system("osascript " . join(insert(s:ascrpt, colour[0], 4), ' '))
   if result =~ '[0-9]\+,[0-9]\+,[0-9]\+'
-    let colour[0] = result
+    let colour[0] = strpart(result, 0, len(result) - 1)
     return colour
   else
     return ['']
