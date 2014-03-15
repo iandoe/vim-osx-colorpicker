@@ -39,12 +39,13 @@ function! s:parse_hex_color(colour)
   let line = getline('.')
   let col = col('.')
   let start_col = 0
+  let pattern = '#\([a-fA-F0-9]\{3,8\}\)'
   while 1
-    let start = match(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
-    let end = matchend(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
+    let start = match(line, pattern, start_col)
+    let end = matchend(line, pattern, start_col)
     if start > -1
       if col >= start + 1 && col <= end
-        return [matchstr(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col), start, end]
+        return [matchstr(line, pattern, start_col), start, end]
         break
       end
       let start_col = end
@@ -56,16 +57,18 @@ function! s:parse_hex_color(colour)
 endfunction
 
 function! s:parse_dec_val(val)
-  let val = a:val
-  if val =~ '^[12]\?[0-9]\{1,2\}$'
-    return printf('%02x', str2nr(val, 10))
+  if a:val =~ '^-\?[12]\?[0-9]\{1,2\}$'
+    let val = str2nr(a:val, 10)
+    let val = max([0, val])
+    let val = min([255, val])
+    return printf('%02x', val)
   else
     return a:val
   end
 endfunction
 
 function! s:parse_percent_val(val)
-  if a:val =~ '^[0-9\.]\+%$'
+  if a:val =~ '^-\?[0-9\.]\+%$'
     let val = strpart(a:val, 0, len(a:val) - 1)
     let val = float2nr( str2float(val) * 2.55 )
     let val = max([0, val])
@@ -97,7 +100,7 @@ function! s:parse_rgb_color(colour)
   let line = getline('.')
   let col = col('.')
   let start_col = 0
-  let pattern = '\crgba\?([0-9 ,\.%]\+)'
+  let pattern = '\crgba\?([0-9 ,\-\.%]\+)'
   while 1
     let start = match(line, pattern, start_col)
     let end = matchend(line, pattern, start_col)
@@ -134,7 +137,7 @@ function! s:parse_html_color()
   let colour = s:parse_rgb_color(colour)
   let w = colour[0]
 
-  if w =~ '#\([a-fA-F0-9]\{3,6\}\)'
+  if w =~ '#\([a-fA-F0-9]\{3,8\}\)'
     let offset = 2
     let mult = 256
     if len(w) == 4 || len(w) == 5
