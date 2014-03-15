@@ -32,8 +32,25 @@ let s:ascrpt = ['-e "tell application \"' . g:colorpicker_app . '\""',
       \ '-e "end tell"']
 
 function! s:parse_html_color()
-  let w = expand("<cword>")
-  if w =~ '#\([a-fA-F1-9]\{3,6\}\)'
+  let w = ''
+  let line = getline('.')
+  let col = col('.')
+  let start_col = 0
+  while 1
+    let start = match(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
+    let end = matchend(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
+    if start > -1
+      if col >= start + 1 && col <= end + 1
+        let w = matchstr(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
+        break
+      end
+      let start_col = end
+    else
+      break
+    end
+  endwhile
+
+  if w =~ '#\([a-fA-F0-9]\{3,6\}\)'
     let offset = 2
     let mult = 256
     if len(w) == 4
