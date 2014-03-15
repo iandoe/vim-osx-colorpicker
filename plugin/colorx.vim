@@ -97,15 +97,15 @@ function! s:parse_rgb_color(w)
   let line = getline('.')
   let col = col('.')
   let start_col = 0
-  let pattern = '\crgb([0-9 ,\.%]\+)'
+  let pattern = '\crgba\?([0-9 ,\.%]\+)'
   while 1
     let start = match(line, pattern, start_col)
     let end = matchend(line, pattern, start_col)
     if start > -1
       if col >= start + 1 && col <= end + 1
         let def = matchstr(line, pattern, start_col)
-        let deflen = len(def)
-        let def = strpart(def, 4, deflen - 5)
+        let def = substitute(def, '\c^rgba\?(', '', '')
+        let def = substitute(def, ')$', '', '')
         let defs = split(def, ',')
         if len(defs) < 3
           return ''
