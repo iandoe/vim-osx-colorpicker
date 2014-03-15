@@ -31,11 +31,11 @@ let s:ascrpt = ['-e "tell application \"' . g:colorpicker_app . '\""',
       \ ') as text"',
       \ '-e "end tell"']
 
-function! s:parse_hex_color(w)
-  if a:w != ''
-    return a:w
+function! s:parse_hex_color(colour)
+  if a:colour[0] != ''
+    return a:colour
   end
-  let w = a:w
+  let w = a:colour[0]
   let line = getline('.')
   let col = col('.')
   let start_col = 0
@@ -44,7 +44,7 @@ function! s:parse_hex_color(w)
     let end = matchend(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
     if start > -1
       if col >= start + 1 && col <= end + 1
-        let w = matchstr(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
+        return [matchstr(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col), start, end]
         break
       end
       let start_col = end
@@ -52,7 +52,7 @@ function! s:parse_hex_color(w)
       break
     end
   endwhile
-  return w
+  return a:colour
 endfunction
 
 function! s:parse_dec_val(val)
@@ -89,11 +89,11 @@ function! s:parse_rgb_val(val)
   end
 endfunction
 
-function! s:parse_rgb_color(w)
-  if a:w != ''
-    return a:w
+function! s:parse_rgb_color(colour)
+  if a:colour[0] != ''
+    return a:colour
   end
-  let w = a:w
+  let w = a:colour[0]
   let line = getline('.')
   let col = col('.')
   let start_col = 0
@@ -114,9 +114,9 @@ function! s:parse_rgb_color(w)
         let cg = s:parse_rgb_val(defs[1])
         let cb = s:parse_rgb_val(defs[2])
         if cr != '' && cg != '' && cb != ''
-          return '#' . cr . cg . cb
+          return ['#' . cr . cg . cb, start, end]
         else
-          return ''
+          return ['']
         end
         break
       end
@@ -125,14 +125,14 @@ function! s:parse_rgb_color(w)
       break
     end
   endwhile
-  return w
+  return a:colour
 endfunction
 
 function! s:parse_html_color()
-  let w = ''
-  let w = s:parse_hex_color(w)
-  let w = s:parse_rgb_color(w)
-  echom w
+  let colour = ['']
+  let colour = s:parse_hex_color(colour)
+  let colour = s:parse_rgb_color(colour)
+  let w = colour[0]
 
   if w =~ '#\([a-fA-F0-9]\{3,6\}\)'
     let offset = 2
@@ -144,34 +144,49 @@ function! s:parse_html_color()
     let cr = str2nr(strpart(w,1,offset), 16) * mult
     let cg = str2nr(strpart(w,1+offset,offset), 16) * mult
     let cb = str2nr(strpart(w,1+2*offset,offset), 16) * mult
-    return printf('default color {%d,%d,%d}', cr, cg, cb)
+    let colour[0] = printf('default color {%d,%d,%d}', cr, cg, cb)
+    return colour
   endif
-  return ''
+  return ['']
 endfunction
 
 function! s:colour_rgb()
   let lst = remove(s:ascrpt, 4)
-  let result = system("osascript " . join(insert(s:ascrpt, s:parse_html_color(), 4), ' '))
+  let colour = s:parse_html_color()
+  let result = system("osascript " . join(insert(s:ascrpt, colour[0], 4), ' '))
   if result =~ '[0-9]\+,[0-9]\+,[0-9]\+'
-    return result
+    let colour[0] = result
+    return colour
   else
-    return ''
+    return ['']
   end
 endfunction
 
-function! s:append_colour(col)
-  exe "normal a" . a:col
+function! s:replace_colour(col)
+  let colour = a:col[0]
+  if colour != '' 
+    if len(a:col) > 1
+      let start = a:col[1]
+      let end = a:col[2]
+      let line = getline('.')
+      let line = strpart(line, 0, start) . colour . strpart(line, end, len(line) - end)
+      call setline(line('.'), line)
+    else
+      exe "normal a" . colour
+    end
+  end
 endfunction
 
 function! s:colour_hex()
-  let rgb = s:colour_rgb()
-  if rgb == ''
-    return ''
+  let colour = s:colour_rgb()
+  if colour[0] == ''
+    return colour
   else
-    let rgb = split(s:colour_rgb(), ',')
-    return printf('#%02X%02X%02X', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+    let rgb = split(colour[0], ',')
+    let colour[0] = printf('#%02X%02X%02X', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+    return colour
   end
 endfunction
 
-command! ColorRGB :call s:append_colour(s:colour_rgb())
-command! ColorHEX :call s:append_colour(s:colour_hex())
+command! ColorRGB :call s:replace_colour(s:colour_rgb())
+command! ColorHEX :call s:replace_colour(s:colour_hex())
