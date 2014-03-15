@@ -31,8 +31,11 @@ let s:ascrpt = ['-e "tell application \"' . g:colorpicker_app . '\""',
       \ ') as text"',
       \ '-e "end tell"']
 
-function! s:parse_html_color()
-  let w = ''
+function! s:parse_hex_color(w)
+  if a:w != ''
+    return a:w
+  end
+  let w = a:w
   let line = getline('.')
   let col = col('.')
   let start_col = 0
@@ -49,6 +52,87 @@ function! s:parse_html_color()
       break
     end
   endwhile
+  return w
+endfunction
+
+function! s:parse_dec_val(val)
+  let val = a:val
+  if val =~ '^[12]\?[0-9]\{1,2\}$'
+    return printf('%02x', str2nr(val, 10))
+  else
+    return a:val
+  end
+endfunction
+
+function! s:parse_percent_val(val)
+  if a:val =~ '^[0-9\.]\+%$'
+    let val = strpart(a:val, 0, len(a:val) - 1)
+    let val = float2nr( str2float(val) * 2.55 )
+    let val = max([0, val])
+    let val = min([255, val])
+    return printf('%x', val)
+  else
+    return a:val
+  end
+endfunction
+
+function! s:parse_rgb_val(val)
+  let val = a:val
+  let val = substitute(val, '^ \+', '', '')
+  let val = substitute(val, ' \+$', '', '')
+  let val = s:parse_dec_val(val)
+  let val = s:parse_percent_val(val)
+  if val =~ '^[a-fA-F0-9]\{2\}$'
+    return val
+  else
+    return ''
+  end
+endfunction
+
+function! s:parse_rgb_color(w)
+  if a:w != ''
+    return a:w
+  end
+  let w = a:w
+  let line = getline('.')
+  let col = col('.')
+  let start_col = 0
+  let pattern = '\crgb([0-9 ,\.%]\+)'
+  while 1
+    let start = match(line, pattern, start_col)
+    let end = matchend(line, pattern, start_col)
+    if start > -1
+      if col >= start + 1 && col <= end + 1
+        let def = matchstr(line, pattern, start_col)
+        let deflen = len(def)
+        let def = strpart(def, 4, deflen - 5)
+        let defs = split(def, ',')
+        if len(defs) < 3
+          return ''
+        end
+        let cr = s:parse_rgb_val(defs[0])
+        let cg = s:parse_rgb_val(defs[1])
+        let cb = s:parse_rgb_val(defs[2])
+        if cr != '' && cg != '' && cb != ''
+          return '#' . cr . cg . cb
+        else
+          return ''
+        end
+        break
+      end
+      let start_col = end
+    else
+      break
+    end
+  endwhile
+  return w
+endfunction
+
+function! s:parse_html_color()
+  let w = ''
+  let w = s:parse_hex_color(w)
+  let w = s:parse_rgb_color(w)
+  echom w
 
   if w =~ '#\([a-fA-F0-9]\{3,6\}\)'
     let offset = 2
