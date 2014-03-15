@@ -186,7 +186,7 @@ function! s:parse_color()
 
   if w =~ '#\([a-fA-F0-9]\{3,8\}\)'
     let offset = 2
-    let mult = 256
+    let mult = 255
     if len(w) < 7
       let offset = 1
       let mult = mult * 17
@@ -248,9 +248,9 @@ function! s:colour_hex(colour)
   else
     let rgb = split(colour[0], ',')
     if len(colour) > 1 && colour[4] != ''
-      let colour[0] = printf('#%02X%02X%02X%02X', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256, str2nr(colour[4], 16))
+      let colour[0] = printf('#%02X%02X%02X%02X', str2nr(rgb[0])/255, str2nr(rgb[1])/255, str2nr(rgb[2])/255, str2nr(colour[4], 16))
     else
-      let colour[0] = printf('#%02X%02X%02X', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+      let colour[0] = printf('#%02X%02X%02X', str2nr(rgb[0])/255, str2nr(rgb[1])/255, str2nr(rgb[2])/255)
     endif
     return colour
   end
@@ -263,9 +263,9 @@ function! s:colour_rgbcss(colour)
   else
     let rgb = split(colour[0], ',')
     if len(colour) > 1 && colour[4] != ''
-      let colour[0] = printf('rgba(%d, %d, %d, %.2f)', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256, str2nr(colour[4], 16)/255.0)
+      let colour[0] = printf('rgba(%d, %d, %d, %.2f)', str2nr(rgb[0])/255, str2nr(rgb[1])/255, str2nr(rgb[2])/255, str2nr(colour[4], 16)/255.0)
     else
-      let colour[0] = printf('rgb(%d, %d, %d)', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+      let colour[0] = printf('rgb(%d, %d, %d)', str2nr(rgb[0])/255, str2nr(rgb[1])/255, str2nr(rgb[2])/255)
     endif
     return colour
   end
@@ -277,10 +277,13 @@ function! s:colour_rgbcss100(colour)
     return colour
   else
     let rgb = split(colour[0], ',')
+    let cr = round(str2nr(rgb[0])*100/65535.0)
+    let cg = round(str2nr(rgb[1])*100/65535.0)
+    let cb = round(str2nr(rgb[2])*100/65535.0)
     if len(colour) > 1 && colour[4] != ''
-      let colour[0] = printf('rgba(%d%%, %d%%, %d%%, %d%%)', str2nr(rgb[0])*100/65536, str2nr(rgb[1])*100/65536, str2nr(rgb[2])*100/65536, str2nr(colour[4], 16)*100/256)
+      let colour[0] = printf('rgba(%.0f%%, %.0f%%, %.0f%%, %.0f%%)', cr, cg, cb, round(str2nr(colour[4], 16)*100/255.0))
     else
-      let colour[0] = printf('rgb(%d%%, %d%%, %d%%)', str2nr(rgb[0])*100/65536, str2nr(rgb[1])*100/65536, str2nr(rgb[2])*100/65536)
+      let colour[0] = printf('rgb(%.0f%%, %.0f%%, %.0f%%)', str2nr(cr, cg, cb)
     endif
     return colour
   end
