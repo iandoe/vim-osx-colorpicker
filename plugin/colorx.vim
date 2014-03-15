@@ -11,6 +11,8 @@
 " Don't load script when already loaded
 " or when not on mac
 
+" Formats: HEX, RGBCSS, RGB100
+
 if exists("g:loaded_colorchooser") || !has('mac')
   finish
 endif
@@ -46,7 +48,7 @@ function! s:parse_hex_color(colour)
     let end = matchend(line, pattern, start_col)
     if start > -1
       if col >= start + 1 && col <= end
-        return [matchstr(line, pattern, start_col), start, end]
+        return [matchstr(line, pattern, start_col), start, end, 'HEX']
         break
       end
       let start_col = end
@@ -124,7 +126,12 @@ function! s:parse_rgb_color(colour)
         let cg = s:parse_rgb_val(defs[1])
         let cb = s:parse_rgb_val(defs[2])
         if cr != '' && cg != '' && cb != ''
-          return ['#' . cr . cg . cb, start, end]
+          if def =~ '%'
+            let format = 'RGB100'
+          else
+            let format = 'RGBCSS'
+          endif
+          return ['#' . cr . cg . cb, start, end, format]
         else
           return ['']
         end
@@ -138,7 +145,7 @@ function! s:parse_rgb_color(colour)
   return a:colour
 endfunction
 
-function! s:parse_html_color()
+function! s:parse_color()
   let colour = ['']
   let colour = s:parse_hex_color(colour)
   let colour = s:parse_rgb_color(colour)
@@ -160,9 +167,9 @@ function! s:parse_html_color()
   return ['']
 endfunction
 
-function! s:colour_rgb()
+function! s:pick_colour(default)
   let lst = remove(s:ascrpt, 4)
-  let colour = s:parse_html_color()
+  let colour = a:default
   let result = system("osascript " . join(insert(s:ascrpt, colour[0], 4), ' '))
   if result =~ '[0-9]\+,[0-9]\+,[0-9]\+'
     let colour[0] = strpart(result, 0, len(result) - 1)
@@ -187,8 +194,12 @@ function! s:replace_colour(col)
   end
 endfunction
 
-function! s:colour_hex()
-  let colour = s:colour_rgb()
+function! s:colour_rgb(colour)
+  return a:colour
+endfunction
+
+function! s:colour_hex(colour)
+  let colour = a:colour
   if colour[0] == ''
     return colour
   else
@@ -198,5 +209,49 @@ function! s:colour_hex()
   end
 endfunction
 
-command! ColorRGB :call s:replace_colour(s:colour_rgb())
-command! ColorHEX :call s:replace_colour(s:colour_hex())
+function! s:colour_rgbcss(colour)
+  let colour = a:colour
+  if colour[0] == ''
+    return colour
+  else
+    let rgb = split(colour[0], ',')
+    let colour[0] = printf('rgb(%d, %d, %d)', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+    return colour
+  end
+endfunction
+
+function! s:colour_rgbcss100(colour)
+  let colour = a:colour
+  if colour[0] == ''
+    return colour
+  else
+    let rgb = split(colour[0], ',')
+    let colour[0] = printf('rgb(%d%%, %d%%, %d%%)', str2nr(rgb[0])*100/65536, str2nr(rgb[1])*100/65536, str2nr(rgb[2])*100/65536)
+    return colour
+  end
+endfunction
+
+function! s:colour(colour)
+  if a:colour[0] == ''
+    return a:colour
+  elseif len(a:colour) > 3
+    let format = a:colour[3]
+  else
+    let format = 'HEX'
+  endif
+  if format == 'HEX'
+    return s:colour_hex(a:colour)
+  elseif format == 'RGBCSS'
+    return s:colour_rgbcss(a:colour)
+  elseif format == 'RGB100'
+    return s:colour_rgbcss100(a:colour)
+  endif
+  return a:colour
+endfunction
+
+command! Color       :call s:replace_colour(s:colour(       s:pick_colour(s:parse_color())))
+command! ColorRGB    :call s:replace_colour(s:colour_rgb(   s:pick_colour(s:parse_color())))
+command! ColorRGBCSS :call s:replace_colour(s:colour_rgbcss(s:pick_colour(s:parse_color())))
+command! ColorRGB100 :call s:replace_colour(s:colour_rgb100(s:pick_colour(s:parse_color())))
+command! ColorHEX    :call s:replace_colour(s:colour_hex(   s:pick_colour(s:parse_color())))
+
