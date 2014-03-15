@@ -43,7 +43,7 @@ function! s:parse_hex_color(colour)
     let start = match(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
     let end = matchend(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col)
     if start > -1
-      if col >= start + 1 && col <= end + 1
+      if col >= start + 1 && col <= end
         return [matchstr(line, '#\([a-fA-F0-9]\{3,6\}\)', start_col), start, end]
         break
       end
@@ -102,7 +102,7 @@ function! s:parse_rgb_color(colour)
     let start = match(line, pattern, start_col)
     let end = matchend(line, pattern, start_col)
     if start > -1
-      if col >= start + 1 && col <= end + 1
+      if col >= start + 1 && col <= end
         let def = matchstr(line, pattern, start_col)
         let def = substitute(def, '\c^rgba\?(', '', '')
         let def = substitute(def, ')$', '', '')
