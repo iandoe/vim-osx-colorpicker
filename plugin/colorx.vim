@@ -53,7 +53,7 @@ function! s:parse_html_color()
   if w =~ '#\([a-fA-F0-9]\{3,6\}\)'
     let offset = 2
     let mult = 256
-    if len(w) == 4
+    if len(w) == 4 || len(w) == 5
       let offset = 1
       let mult = mult * 17
     endif
