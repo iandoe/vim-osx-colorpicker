@@ -67,7 +67,12 @@ endfunction
 
 function! s:colour_rgb()
   let lst = remove(s:ascrpt, 4)
-  return system("osascript " . join(insert(s:ascrpt, s:parse_html_color(), 4), ' '))
+  let result = system("osascript " . join(insert(s:ascrpt, s:parse_html_color(), 4), ' '))
+  if result =~ '[0-9]\+,[0-9]\+,[0-9]\+'
+    return result
+  else
+    return ''
+  end
 endfunction
 
 function! s:append_colour(col)
@@ -75,8 +80,13 @@ function! s:append_colour(col)
 endfunction
 
 function! s:colour_hex()
-  let rgb = split(s:colour_rgb(), ',')
-  return printf('#%02X%02X%02X', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+  let rgb = s:colour_rgb()
+  if rgb == ''
+    return ''
+  else
+    let rgb = split(s:colour_rgb(), ',')
+    return printf('#%02X%02X%02X', str2nr(rgb[0])/256, str2nr(rgb[1])/256, str2nr(rgb[2])/256)
+  end
 endfunction
 
 command! ColorRGB :call s:append_colour(s:colour_rgb())
