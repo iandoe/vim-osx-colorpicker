@@ -208,7 +208,7 @@ function! s:parse_color()
     return colour
   endif
 
-  let colour[0] = ''
+  let colour[0] = printf('default color {%d,%d,%d}', 65535, 65535, 65535)
   return colour
 endfunction
 
