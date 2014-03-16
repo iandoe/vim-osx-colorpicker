@@ -56,7 +56,7 @@ function! s:parse_hex_color(colour)
       break
     end
   endwhile
-  return a:colour
+  return ['', col, col, '', '']
 endfunction
 
 " Convert dec value to HEX
@@ -166,7 +166,7 @@ function! s:parse_rgb_color(colour)
           endif
           return ['#' . cr . cg . cb . alpha, start, end, format, '']
         else
-          return ['']
+          return ['', col, col, '', '']
         end
         break
       end
@@ -207,7 +207,9 @@ function! s:parse_color()
     let colour[0] = printf('default color {%d,%d,%d}', cr, cg, cb)
     return colour
   endif
-  return ['']
+
+  let colour[0] = ''
+  return colour
 endfunction
 
 function! s:pick_colour(default)
@@ -225,15 +227,11 @@ endfunction
 function! s:replace_colour(col)
   let colour = a:col[0]
   if colour != '' 
-    if len(a:col) > 1
-      let start = a:col[1]
-      let end = a:col[2]
-      let line = getline('.')
-      let line = strpart(line, 0, start) . colour . strpart(line, end, len(line) - end)
-      call setline(line('.'), line)
-    else
-      exe "normal a" . colour
-    end
+    let start = a:col[1]
+    let end = a:col[2]
+    let line = getline('.')
+    let line = strpart(line, 0, start) . colour . strpart(line, end, len(line) - end)
+    call setline(line('.'), line)
   end
 endfunction
 
