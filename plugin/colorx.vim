@@ -257,7 +257,7 @@ function! s:parse_hsl_color(colour)
           let alpha = s:parse_alpha_val(defs[3])
         endif
         if cr != '' && cg != '' && cb != ''
-          let format = 'HEX'
+          let format = 'HSL'
           return ['#' . cr . cg . cb . alpha, start, end, format, '']
         else
           return ['', col, col, '', '']
@@ -398,11 +398,65 @@ function! s:colour_rgbcss100(colour)
     if len(colour) > 1 && colour[4] != ''
       let colour[0] = printf('rgba(%.0f%%, %.0f%%, %.0f%%, %.0f%%)', cr, cg, cb, round(str2nr(colour[4], 16)*100/255.0))
     else
-      let colour[0] = printf('rgb(%.0f%%, %.0f%%, %.0f%%)', str2nr(cr, cg, cb)
+      let colour[0] = printf('rgb(%.0f%%, %.0f%%, %.0f%%)', str2nr(cr, cg, cb))
     endif
     return colour
   end
 endfunction
+
+function! s:rgb2hsl(cr, cg, cb)
+  let ma = max([a:cr, a:cg, a:cb]) / 255.0
+  let mi = min([a:cr, a:cg, a:cb]) / 255.0
+  let cr = a:cr / 255.0
+  let cg = a:cg / 255.0
+  let cb = a:cb / 255.0
+  if ma == mi
+    let h = 0
+  elseif ma == cr && cg >= cb
+    let h = 60 * (cg - cb) / (ma - mi)
+  elseif ma == cr && cg < cb
+    let h = 60 * (cg - cb) / (ma - mi) + 360
+  elseif ma == cg
+    let h = 60 * (cb - cr) / (ma - mi) + 120
+  else "if ma == cb
+    let h = 60 * (cb - cr) / (ma - mi) + 240
+  endif
+  let h = float2nr(h) % 360
+
+  let l = 0.5 * (ma + mi)
+
+  if l == 0 || ma == mi
+    let s = 0
+  elseif l > 0 && l <= 0.5
+    let s = (ma - mi) / (2 * l)
+  else " if l > 0.5
+    let s = (ma - mi) / (2 * (1 - l))
+  endif
+  return [h, s, l]
+endfunction
+
+function! s:colour_hsl(colour)
+  let colour = a:colour
+  if colour[0] == ''
+    return colour
+  else
+    let rgb = split(colour[0], ',')
+    let cr = s:four2two(str2nr(rgb[0]))
+    let cg = s:four2two(str2nr(rgb[1]))
+    let cb = s:four2two(str2nr(rgb[2]))
+    let hsl = s:rgb2hsl(cr, cg, cb)
+    let h = hsl[0]
+    let s = hsl[1]
+    let l = hsl[2]
+    if len(colour) > 1 && colour[4] != ''
+      let colour[0] = printf('hsla(%d, %.0f%%, %.0f%%, %.0f%%)', h, s * 100, l * 100, round(str2nr(colour[4], 16)*100/255.0))
+    else
+      let colour[0] = printf('hsl(%d, %.0f%%, %.0f%%)', h, s * 100, l * 100)
+    endif
+    return colour
+  end
+endfunction
+
 
 function! s:colour(colour)
   if a:colour[0] == ''
@@ -419,6 +473,8 @@ function! s:colour(colour)
     return s:colour_rgbcss(a:colour)
   elseif format == 'RGB100'
     return s:colour_rgbcss100(a:colour)
+  elseif format == 'HSL'
+    return s:colour_hsl(a:colour)
   endif
   return a:colour
 endfunction
@@ -427,5 +483,6 @@ command! Color       :call s:replace_colour(s:colour(       s:pick_colour(s:pars
 command! ColorRGB    :call s:replace_colour(s:colour_rgb(   s:pick_colour(s:parse_color())))
 command! ColorRGBCSS :call s:replace_colour(s:colour_rgbcss(s:pick_colour(s:parse_color())))
 command! ColorRGB100 :call s:replace_colour(s:colour_rgb100(s:pick_colour(s:parse_color())))
+command! ColorHSL    :call s:replace_colour(s:colour_hsl(   s:pick_colour(s:parse_color())))
 command! ColorHEX    :call s:replace_colour(s:colour_hex(   s:pick_colour(s:parse_color())))
 
