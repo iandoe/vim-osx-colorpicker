@@ -398,7 +398,7 @@ function! s:colour_rgbcss100(colour)
     if len(colour) > 1 && colour[4] != ''
       let colour[0] = printf('rgba(%.0f%%, %.0f%%, %.0f%%, %.0f%%)', cr, cg, cb, round(str2nr(colour[4], 16)*100/255.0))
     else
-      let colour[0] = printf('rgb(%.0f%%, %.0f%%, %.0f%%)', str2nr(cr, cg, cb))
+      let colour[0] = printf('rgb(%.0f%%, %.0f%%, %.0f%%)', cr, cg, cb)
     endif
     return colour
   end
@@ -479,10 +479,10 @@ function! s:colour(colour)
   return a:colour
 endfunction
 
-command! Color       :call s:replace_colour(s:colour(       s:pick_colour(s:parse_color())))
-command! ColorRGB    :call s:replace_colour(s:colour_rgb(   s:pick_colour(s:parse_color())))
-command! ColorRGBCSS :call s:replace_colour(s:colour_rgbcss(s:pick_colour(s:parse_color())))
-command! ColorRGB100 :call s:replace_colour(s:colour_rgb100(s:pick_colour(s:parse_color())))
-command! ColorHSL    :call s:replace_colour(s:colour_hsl(   s:pick_colour(s:parse_color())))
-command! ColorHEX    :call s:replace_colour(s:colour_hex(   s:pick_colour(s:parse_color())))
+command! Color       :call s:replace_colour(s:colour(          s:pick_colour(s:parse_color())))
+command! ColorRGB    :call s:replace_colour(s:colour_rgb(      s:pick_colour(s:parse_color())))
+command! ColorRGBCSS :call s:replace_colour(s:colour_rgbcss(   s:pick_colour(s:parse_color())))
+command! ColorRGB100 :call s:replace_colour(s:colour_rgbcss100(s:pick_colour(s:parse_color())))
+command! ColorHSL    :call s:replace_colour(s:colour_hsl(      s:pick_colour(s:parse_color())))
+command! ColorHEX    :call s:replace_colour(s:colour_hex(      s:pick_colour(s:parse_color())))
 
